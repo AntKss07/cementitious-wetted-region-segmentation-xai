@@ -197,8 +197,8 @@ The dataset consists of high-resolution video recordings tracking capillary wate
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/AntKss07/sorptivity.git
-cd sorptivity
+git clone https://github.com/AntKss07/cementitious-wetted-region-segmentation-xai.git
+cd cementitious-wetted-region-segmentation-xai
 ```
 
 ### 2. Set Up Python Environment

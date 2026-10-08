@@ -1,0 +1,40 @@
+# Environment & Virtual Environments
+.venv/
+.venv*/
+venv/
+ENV/
+env/
+
+# AI Agent & IDE Customizations (DO NOT COMMIT)
+.agents/
+.gemini/
+.claude/
+.cursor/
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Operating System Files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Large Model Checkpoints (>100MB exceed GitHub push limits)
+# Note: Checkpoints can be downloaded or tracked via Git LFS
+*.pth
+*.pt
+*.onnx
+*.bin

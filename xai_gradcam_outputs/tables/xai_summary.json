@@ -1,0 +1,38 @@
+{
+  "model": "U-Net++ (ResNet-34)",
+  "checkpoint": "evaluation\\unetpp\\unetpp_best.pth",
+  "target_layer": "decoder.blocks.x_0_4",
+  "total_test_frames": 218,
+  "benchmark_metrics": {
+    "dice": 0.9647983657110721,
+    "iou": 0.933920107850241,
+    "precision": 0.9695688130658701,
+    "recall": 0.960770462084254,
+    "accuracy": 0.9826915452786542,
+    "war_mae": 0.00573748881168185,
+    "war_rmse": 0.007494380990570185,
+    "war_r2": 0.9979885792887764
+  },
+  "spatial_attribution_fractions": {
+    "overall": {
+      "mean_roi_cam_fraction": 0.998934255280626,
+      "mean_wet_cam_fraction": 0.9933883143127511,
+      "mean_bg_cam_fraction": 0.0010657433224569605,
+      "mean_boundary_cam_fraction": 0.17775757340799778
+    },
+    "best_cases": {
+      "mean_roi_cam_fraction": 0.9998021721839905,
+      "mean_bg_cam_fraction": 0.00019785337402330092
+    },
+    "worst_cases": {
+      "mean_roi_cam_fraction": 0.973025361696879,
+      "mean_bg_cam_fraction": 0.026974633025626343
+    }
+  },
+  "correlation_diagnostics": {
+    "dice_vs_bg_cam_pearson_r": -0.7268051500368745,
+    "dice_vs_bg_cam_p_value": 4.288862910444473e-37,
+    "war_error_vs_bg_cam_spearman_rho": 0.4632902646482714,
+    "war_error_vs_bg_cam_p_value": 5.3567788683157e-13
+  }
+}

@@ -1,5 +1,14 @@
 # Automated Sorptivity & Wetted-Region Segmentation in Cementitious Materials
 
+> **Local research frontend:** see [FRONTEND.md](FRONTEND.md) for setup and the
+> artifact/provenance audit. Launch with `python -m research_app.server` after
+> installing `requirements-frontend.txt`, or use `./start-frontend.ps1` on Windows.
+> The explorer uses current evaluation CSVs and the 28-video split manifest.
+> Published WAR currently uses the full-image denominator. Validated
+> specimen-normalized WAR and sorptivity regression are unavailable. Older claims
+> and counts below are preserved as original research documentation; discrepancies
+> are identified in the frontend and its guide.
+
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![CUDA](https://img.shields.io/badge/CUDA-11.8%20%2F%2012.1-green.svg)](https://developer.nvidia.com/cuda-toolkit)

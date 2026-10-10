@@ -38,3 +38,8 @@ Desktop.ini
 *.pt
 *.onnx
 *.bin
+
+# Local frontend previews and optional browser test dependencies
+.preview/
+node_modules/
+test-results/

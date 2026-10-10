@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore cementitious wetted-region segmentation, benchmark results and Grad-CAM++ research artifacts.">
+  <title>Cementitious · Research Explorer</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <aside class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-icon">◩</span><span>CEMENTITIOUS<small>RESEARCH EXPLORER</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <nav aria-label="Research sections">
+      <a href="#overview"><span>01</span>Research overview</a>
+      <a href="#segmentation"><span>02</span>Segmentation explorer</a>
+      <a href="#benchmark"><span>03</span>Model benchmark</a>
+      <a href="#xai"><span>04</span>Explainability laboratory</a>
+      <a href="#dataset"><span>05</span>Dataset & annotations</a>
+      <a href="#outputs"><span>06</span>Research outputs</a>
+      <a href="#vlm"><span>07</span>VLM analysis <em>Planned</em></a>
+    </nav>
+    <div class="sidebar-note"><span class="status-dot"></span> Artifact-driven workspace<p>Segmentation · WAR · Grad-CAM++</p><small>Local research collection<br>No live model inference</small></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span>Materials science <b>/</b> Capillary water absorption</span><span class="pill">RESEARCH ARTIFACTS</span></header>
+    <main id="content" tabindex="-1"><div class="loading" role="status">Reading research artifacts…</div></main>
+    <footer>Wetted-region segmentation & explainability <span>Source-linked results · Scientific provenance included</span></footer>
+  </div>
+  <dialog id="image-dialog" aria-label="Full-size artifact inspection"><div class="dialog-head"><strong id="dialog-title">Artifact</strong><button id="close-dialog" aria-label="Close image">Close ×</button></div><div class="zoom-toolbar"><label>Zoom <input id="zoom" type="range" min="25" max="200" value="100"> <output id="zoom-value">100%</output></label><a id="dialog-download" download>Download image ↗</a></div><div class="zoom-scroll"><img id="dialog-image" alt=""></div></dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

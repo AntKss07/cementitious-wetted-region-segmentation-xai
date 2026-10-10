@@ -136,11 +136,15 @@ Evaluated across all 218 test images to prove model soundness and absence of bac
 ├── build_xai_notebook.py                     # Programmatic builder for XAI notebook
 │
 ├── Notebooks (Reproducible Pipeline)
-│   ├── unetpp1.ipynb                         # U-Net++ (ResNet-34) Training & Evaluation (Winner)
+│   ├── unetpp-res34.ipynb                    # U-Net++ (ResNet-34) Training & Evaluation (Winner)
+│   ├── unetpp-res50.ipynb                    # U-Net++ (ResNet-50) Pipeline
 │   ├── deeplabv3plus.ipynb                   # DeepLabV3+ (ResNet-50) Pipeline
 │   ├── segformer_b1.ipynb                    # SegFormer-B1 (MiT-B1) Pipeline
 │   ├── fpn1.ipynb                            # FPN (EfficientNet-B2) Pipeline
 │   └── xai_gradcam_unetpp.ipynb              # 34-Cell Standalone Grad-CAM++ XAI Notebook
+│
+├── outputs/                                  # Qualitative Visualizations (5-Panel Benchmark Figures)
+│   └── segformer_visualizations/             # Test set 5-panel predictions, CSV, contact sheet, PDF
 │
 ├── evaluation/                               # Benchmark Evaluation Metrics & Visualizations
 │   ├── four_architecture_benchmark_comparison.csv

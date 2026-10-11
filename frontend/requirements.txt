@@ -1,0 +1,9 @@
+# Requirements for Cementitious Sorptivity Segmentation & XAI Workbench
+torch>=2.0.0
+torchvision
+segmentation-models-pytorch>=0.3.0
+opencv-python
+pillow
+numpy
+pandas
+aiohttp>=3.8.0

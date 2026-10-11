@@ -1,3 +1,0 @@
-# No PyTorch or training environment is required for the artifact explorer.
-numpy>=1.24,<3
-Pillow>=10,<13

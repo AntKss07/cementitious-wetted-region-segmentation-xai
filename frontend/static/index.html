@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cementitious Sorptivity Segmentation & Explainable AI Workbench</title>
+  <meta name="description" content="Research platform for U-Net++ ResNet-34 cementitious wetted-region segmentation, physical WAR calculation, and Grad-CAM++ attribution analysis.">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="/static/css/design-tokens.css">
+  <link rel="stylesheet" href="/static/css/workbench.css">
+</head>
+<body>
+
+  <!-- ====================================================================
+       Header Instrument Bar
+       ==================================================================== -->
+  <header class="app-header">
+    <div class="brand-section">
+      <svg class="brand-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 17 12 22 22 17"></polyline>
+        <polyline points="2 12 12 17 22 12"></polyline>
+      </svg>
+      <h1 class="brand-title">SORPTIVITY XAI WORKBENCH</h1>
+      <span class="brand-subtitle">U-Net++ ResNet-34</span>
+    </div>
+
+    <div class="header-telemetry">
+      <div id="devicePill" class="telemetry-pill">
+        <span id="statusDot" class="indicator-dot"></span>
+        <span>DEVICE: CHECKING...</span>
+      </div>
+      <div id="modelPill" class="telemetry-pill">
+        <span>U-Net++ (ResNet-34) [evaluation/unetpp_best.pth]</span>
+      </div>
+      <div id="latencyPill" class="telemetry-pill">
+        <span>LATENCY: -- ms</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       Main 3-Column Layout
+       ==================================================================== -->
+  <main class="workbench-layout">
+
+    <!-- 1. LEFT CONTROL RAIL -->
+    <aside class="control-rail" aria-label="Workbench Controls">
+      
+      <!-- Ingestion Source Selection -->
+      <section class="panel-card">
+        <div class="panel-title">
+          <span>Specimen Ingestion</span>
+        </div>
+
+        <div style="display: flex; gap: var(--space-xs); margin-bottom: var(--space-sm);">
+          <button type="button" id="sourceModeBenchmark" class="benchmark-chip active" style="flex: 1;">Benchmark Library</button>
+          <button type="button" id="sourceModeUpload" class="benchmark-chip" style="flex: 1;">Custom Upload</button>
+        </div>
+
+        <!-- Benchmark Mode -->
+        <div id="benchmarkSection">
+          <div class="form-group">
+            <label class="form-label" for="videoSelect">Video Sequence</label>
+            <select id="videoSelect" class="form-select"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="frameSelect">Frame Index</label>
+            <select id="frameSelect" class="form-select"></select>
+          </div>
+
+          <div class="form-group">
+            <span class="form-label">Fast Presets</span>
+            <div id="benchmarkChips" class="benchmark-pills"></div>
+          </div>
+        </div>
+
+        <!-- Custom Upload Mode -->
+        <div id="uploadSection" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Input Specimen Image</label>
+            <div id="dropzone" class="dropzone">
+              <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              <div id="dropzoneText" class="dropzone-text">Click or Drop Image Here</div>
+              <div class="dropzone-hint">JPG, PNG up to 448x448</div>
+              <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Optional Ground Truth Mask</label>
+            <div id="maskDropzone" class="dropzone">
+              <div id="maskDropzoneText" class="dropzone-text">Drop Binary Mask (Optional)</div>
+              <input type="file" id="maskFileInput" accept="image/*" style="display: none;">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preprocessing & Model Parameters -->
+      <section class="panel-card">
+        <div class="panel-title">
+          <span>Inference Parameters</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="targetLayerSelect">Grad-CAM++ Target Layer</label>
+          <select id="targetLayerSelect" class="form-select">
+            <option value="decoder_x_0_4">decoder.blocks.x_0_4 (Late Decoder - 448x448 Primary)</option>
+            <option value="decoder_x_0_3">decoder.blocks.x_0_3 (Mid Decoder)</option>
+            <option value="encoder_layer4">encoder.layer4 (Deep Bottleneck Encoder)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label class="form-label" for="thresholdSlider">Segmentation Threshold</label>
+            <span id="thresholdVal" class="slider-val">0.50</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" id="thresholdSlider" class="slider-input" min="0.10" max="0.90" step="0.05" value="0.50">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label" for="applyPhysicsCheck">
+            <input type="checkbox" id="applyPhysicsCheck" class="checkbox-input" checked>
+            <span>Enforce Waterline Physics (Bottom Contiguity)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="bottomMarginInput">Bottom Margin Tolerance (px)</label>
+          <input type="number" id="bottomMarginInput" class="form-input" min="0" max="100" value="32">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="colormapSelect">Grad-CAM++ Colormap</label>
+          <select id="colormapSelect" class="form-select">
+            <option value="jet">Jet (Standard Thermal)</option>
+            <option value="plasma">Plasma (Perceptually Uniform)</option>
+            <option value="inferno">Inferno</option>
+            <option value="viridis">Viridis</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between;">
+            <label class="form-label" for="alphaSlider">Heatmap Overlay Opacity</label>
+            <span id="alphaVal" class="slider-val">0.55</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" id="alphaSlider" class="slider-input" min="0.10" max="0.90" step="0.05" value="0.55">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label" for="includeAugCheck">
+            <input type="checkbox" id="includeAugCheck" class="checkbox-input">
+            <span>Simulate Training Augmentation</span>
+          </label>
+        </div>
+
+        <button type="button" id="btnRunAnalysis" class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Execute Analysis Pipeline
+        </button>
+      </section>
+
+    </aside>
+
+    <!-- 2. CENTRAL VIEWPORT CANVAS -->
+    <section class="viewport-canvas" aria-label="Inspection Viewport">
+      
+      <div class="viewport-toolbar">
+        <div class="view-tabs">
+          <button type="button" id="tabGrid" class="tab-btn active">4-Panel Matrix</button>
+          <button type="button" id="tabSlider" class="tab-btn">Comparison Slider</button>
+          <button type="button" id="tabHeatmap" class="tab-btn">XAI Heatmap Focus</button>
+          <button type="button" id="tabError" class="tab-btn" style="display: none;">Ground Truth Error Map</button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+          <span style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">Resolution: 448 × 448 px</span>
+        </div>
+      </div>
+
+      <div class="viewport-content">
+
+        <!-- 4-Panel Grid View -->
+        <div id="viewGridContainer" class="inspection-grid">
+          
+          <!-- Panel 1: Input Image -->
+          <div class="view-card">
+            <div class="view-card-header">
+              <span>(a) Input Specimen Frame</span>
+              <span class="view-card-badge">Normalized</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgInput" alt="Input specimen">
+            </div>
+          </div>
+
+          <!-- Panel 2: Raw Segmentation Mask -->
+          <div class="view-card">
+            <div class="view-card-header">
+              <span>(b) Raw U-Net++ Output</span>
+              <span class="view-card-badge">Thresholded</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgRawMask" alt="Raw segmentation mask">
+            </div>
+          </div>
+
+          <!-- Panel 3: Physics-Enforced Segmentation Overlay -->
+          <div class="view-card">
+            <div class="view-card-header">
+              <span>(c) Physics-Enforced Mask</span>
+              <span class="view-card-badge" style="color: var(--color-emerald);">Bottom Contiguous</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgPhysOverlay" alt="Physics-enforced overlay">
+            </div>
+          </div>
+
+          <!-- Panel 4: Grad-CAM++ Attribution Heatmap -->
+          <div class="view-card">
+            <div class="view-card-header">
+              <span>(d) Grad-CAM++ Saliency</span>
+              <span class="view-card-badge" style="color: var(--color-amber);">XAI Attribution</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgGradcam" alt="Grad-CAM++ heatmap overlay">
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Comparison Slider View -->
+        <div id="viewSliderContainer" style="display: none; width: 100%; flex-direction: column; align-items: center; gap: var(--space-md);">
+          
+          <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xs);">
+            <label class="form-label" for="sliderModeSelect" style="margin-bottom: 0;">Comparison Mode:</label>
+            <select id="sliderModeSelect" class="form-select" style="width: auto;">
+              <option value="input_vs_physics">Input Frame ↔ Physics-Enforced Mask</option>
+              <option value="input_vs_gradcam">Input Frame ↔ Grad-CAM++ Heatmap</option>
+              <option value="raw_vs_physics">Raw U-Net++ ↔ Physics-Enforced Mask</option>
+              <option value="gt_vs_prediction">Ground Truth ↔ U-Net++ Prediction</option>
+            </select>
+          </div>
+
+          <div id="comparatorContainer" class="comparator-container">
+            <div class="comparator-before">
+              <img id="comparatorBeforeImg" alt="Before comparison">
+            </div>
+            <div id="comparatorAfter" class="comparator-after">
+              <img id="comparatorAfterImg" alt="After comparison">
+            </div>
+            <div id="comparatorDivider" class="comparator-divider">
+              <div class="comparator-handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </div>
+            </div>
+            <span id="labelBefore" class="comparator-label label-left">Input Specimen</span>
+            <span id="labelAfter" class="comparator-label label-right">Physics Segmentation</span>
+          </div>
+
+          <div style="font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono);">
+            Drag the vertical divider left or right to inspect boundary alignment
+          </div>
+        </div>
+
+        <!-- Single Heatmap Deep Dive View -->
+        <div id="viewHeatmapContainer" style="display: none; width: 100%; flex-direction: column; align-items: center; gap: var(--space-md);">
+          <div class="view-card" style="width: 100%; max-width: 520px;">
+            <div class="view-card-header">
+              <span>Grad-CAM++ Saliency Heatmap Overlay</span>
+              <span class="view-card-badge" style="color: var(--color-cyan);">decoder.blocks.x_0_4</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgHeatmapLarge" alt="Grad-CAM++ overlay large">
+            </div>
+          </div>
+        </div>
+
+        <!-- Ground Truth Error Map View -->
+        <div id="viewErrorContainer" style="display: none; width: 100%; flex-direction: column; align-items: center; gap: var(--space-md);">
+          <div class="view-card" style="width: 100%; max-width: 520px;">
+            <div class="view-card-header">
+              <span>Segmentation Confusion / Error Map</span>
+              <span class="view-card-badge">Pixel-Level Verification</span>
+            </div>
+            <div class="view-card-body">
+              <img id="imgErrorMapLarge" alt="Error map">
+            </div>
+          </div>
+
+          <div id="errorLegendCard" class="panel-card" style="width: 100%; max-width: 520px;">
+            <span class="panel-title" style="margin-bottom: var(--space-xs);">Error Classification Legend</span>
+            <div class="legend-list">
+              <div class="legend-item">
+                <span class="legend-chip">
+                  <span class="legend-color-box" style="background-color: #10b981;"></span>
+                  <span>True Positive (TP) - Correct Wetted Region</span>
+                </span>
+                <span style="font-family: var(--font-mono); color: var(--color-emerald);">Green</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-chip">
+                  <span class="legend-color-box" style="background-color: #ef4444;"></span>
+                  <span>False Positive (FP) - Over-segmentation Artifact</span>
+                </span>
+                <span style="font-family: var(--font-mono); color: var(--color-crimson);">Red</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-chip">
+                  <span class="legend-color-box" style="background-color: #3b82f6;"></span>
+                  <span>False Negative (FN) - Under-segmentation / Missed Wet Front</span>
+                </span>
+                <span style="font-family: var(--font-mono); color: #60a5fa;">Blue</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-chip">
+                  <span class="legend-color-box" style="background-color: #0f172a; border: 1px solid var(--border-default);"></span>
+                  <span>True Negative (TN) - Dry Specimen / Background</span>
+                </span>
+                <span style="font-family: var(--font-mono); color: var(--text-muted);">Dark Slate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. RIGHT TELEMETRY RAIL -->
+    <aside class="telemetry-rail" aria-label="Quantitative Telemetry">
+      
+      <!-- Primary Wetted Area Ratio Card -->
+      <section class="metric-hero-card">
+        <div class="metric-hero-title">Wetted Area Ratio (WAR)</div>
+        <div id="warHeroVal" class="metric-hero-val">--.--%</div>
+        <div id="warHeroSub" class="metric-hero-sub">RAW: --% | PHYS: --%</div>
+
+        <div class="distribution-bar">
+          <div id="distFillWet" class="distribution-fill-wet" style="width: 0%;"></div>
+          <div class="distribution-fill-dry"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.6875rem; color: var(--text-muted); font-family: var(--font-mono);">
+          <span>0%</span>
+          <span>50%</span>
+          <span>100%</span>
+        </div>
+      </section>
+
+      <!-- Pixel Distribution Metrics -->
+      <section class="panel-card">
+        <div class="panel-title">
+          <span>Pixel Quantities</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Wetted Pixels</div>
+            <div id="wetPixelsVal" class="metric-cell-val">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Total Frame Pixels</div>
+            <div id="totalPixelsVal" class="metric-cell-val">200,704</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Absorption Height</div>
+            <div id="absorptionHeightVal" class="metric-cell-val">-- px</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Noise Filtered</div>
+            <div id="noiseFilteredVal" class="metric-cell-val" style="color: var(--color-amber);">-- px</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ground Truth Validation (visible if GT mask exists) -->
+      <section id="gtSection" class="panel-card" style="display: none;">
+        <div class="panel-title">
+          <span>Benchmark Overlap Metrics</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Ground Truth WAR</div>
+            <div id="warGtVal" class="metric-cell-val" style="color: #60a5fa;">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">WAR Absolute Error</div>
+            <div id="warErrVal" class="metric-cell-val" style="color: var(--color-emerald);">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Dice Similarity</div>
+            <div id="diceVal" class="metric-cell-val">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Intersection over Union</div>
+            <div id="iouVal" class="metric-cell-val">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Precision</div>
+            <div id="precisionVal" class="metric-cell-val">--</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-cell-lbl">Recall</div>
+            <div id="recallVal" class="metric-cell-val">--</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Computational Performance Telemetry -->
+      <section class="panel-card">
+        <div class="panel-title">
+          <span>Latency Profile</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--space-xs); font-family: var(--font-mono); font-size: var(--text-xs);">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Preprocessing:</span>
+            <span id="latencyPreproc">-- ms</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">U-Net++ & GradCAM++:</span>
+            <span id="latencyInference">-- ms</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Physics Enforcement:</span>
+            <span id="latencyPhysics">-- ms</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Report & Export Section -->
+      <section class="panel-card">
+        <div class="panel-title">
+          <span>Export Research Report</span>
+        </div>
+        <button type="button" id="btnExportJson" class="btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export Quantitative JSON Report
+        </button>
+      </section>
+
+    </aside>
+
+  </main>
+
+  <!-- Loading Modal Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="spinner"></div>
+    <div id="loadingMessage" style="font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary);">Processing...</div>
+  </div>
+
+  <!-- JavaScript Applications -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

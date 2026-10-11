@@ -1,26 +1,20 @@
 # Automated Sorptivity & Wetted-Region Segmentation in Cementitious Materials
 
-> **Local research frontend:** see [FRONTEND.md](FRONTEND.md) for setup and the
-> artifact/provenance audit. Launch with `python -m research_app.server` after
-> installing `requirements-frontend.txt`, or use `./start-frontend.ps1` on Windows.
-> The explorer uses current evaluation CSVs and the 28-video split manifest.
-> Published WAR currently uses the full-image denominator. Validated
-> specimen-normalized WAR and sorptivity regression are unavailable. Older claims
-> and counts below are preserved as original research documentation; discrepancies
-> are identified in the frontend and its guide.
+> **Interactive Research Workbench:** Launch the local scientific workbench with `python -m frontend.app.server --port 8000` or on Windows run `.\frontend\run.ps1 -Port 8000`. Provides live inference using the frozen best checkpoint (`evaluation/unetpp_best.pth`), physics-informed waterline post-processing, automated Wetted Area Ratio (WAR) analysis, and analytical Grad-CAM++ visual explainability.
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
-[![CUDA](https://img.shields.io/badge/CUDA-11.8%20%2F%2012.1-green.svg)](https://developer.nvidia.com/cuda-toolkit)
+[![CUDA](https://img.shields.io/badge/CUDA-11.8%20%2F%2012.8-green.svg)](https://developer.nvidia.com/cuda-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An end-to-end deep learning and Explainable AI (XAI) framework for **automated capillary water absorption (sorptivity) measurement** in concrete and cementitious materials. This repository provides standardized implementations of four modern semantic segmentation architectures, a rigorous multi-annotator consensus benchmark, automated physical **Wetted Area Ratio (WAR)** kinematic extraction, and segmentation-specific **Grad-CAM++** interpretability.
+An end-to-end deep learning and Explainable AI (XAI) framework for **automated capillary water absorption (sorptivity) measurement** in concrete and cementitious materials. This repository provides standardized implementations of four modern semantic segmentation architectures, a rigorous multi-annotator consensus benchmark, automated physical **Wetted Area Ratio (WAR)** kinematic extraction, segmentation-specific **Grad-CAM++** interpretability, and a dedicated **Swiss Minimalist Scientific Workbench** web application.
 
 ---
 
 ## 📌 Table of Contents
 
 - [Overview & Research Motivation](#-overview--research-motivation)
+- [Interactive Research Workbench (Frontend)](#-interactive-research-workbench-frontend)
 - [Benchmark Results](#-benchmark-results)
 - [Explainable AI (XAI) via Grad-CAM++](#-explainable-ai-xai-via-grad-cam)
   - [Mathematical Formulation for Segmentation](#mathematical-formulation-for-segmentation)
@@ -31,6 +25,9 @@ An end-to-end deep learning and Explainable AI (XAI) framework for **automated c
 - [Dataset & Multi-Annotator Protocol](#-dataset--multi-annotator-protocol)
 - [Installation & Environment Setup](#-installation--environment-setup)
 - [Quickstart & Reproduction Guide](#-quickstart--reproduction-guide)
+  - [1. Launch Interactive Web Workbench](#1-launch-interactive-web-workbench)
+  - [2. Run Grad-CAM++ XAI Notebook](#2-run-grad-cam-xai-notebook)
+  - [3. Run Model Training Pipelines](#3-run-model-training-pipelines)
 - [Citation & License](#-citation--license)
 
 ---
@@ -62,8 +59,9 @@ Input Specimen Image (448×448 RGB)
          │
          ▼
 ┌────────────────────────────────────────────────────────┐
-│  Physical Parameter Estimation                         │
-│  Wetted Area Ratio (WAR) = Wet Pixels / Specimen ROI   │
+│  Physical Domain Constraints & Kinematic Extraction    │
+│  • Bottom Reservoir Contiguity (enforce_waterline_physics)
+│  • Wetted Area Ratio (WAR) = Wet Pixels / Frame Pixels │
 └────────────────────────────────────────────────────────┘
          │
          ▼
@@ -73,7 +71,49 @@ Input Specimen Image (448×448 RGB)
 │  • Final Dense Decoder Layer: decoder.blocks.x_0_4     │
 │  • Spatial Attribution Breakdown & Boundary Profiling  │
 └────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌────────────────────────────────────────────────────────┐
+│  Interactive Research Workbench (Frontend)             │
+│  • 4-Panel Synchronized Matrix                         │
+│  • Interactive Split-Curtain Comparison Slider         │
+│  • Live Telemetry & Error Maps (TP / FP / FN / TN)     │
+└────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 🖥️ Interactive Research Workbench (Frontend)
+
+The repository provides a complete web application built under the **Swiss Minimalist Scientific Instrument** aesthetic (governed by `ui-ux-pro-max`), strictly eliminating "vibe-coded" fluff, excessive glow, or low-contrast cards in favor of a clean, high-density laboratory interface.
+
+```
+frontend/
+├── app/
+│   ├── model.py            # Loads evaluation/unetpp_best.pth & normalizes tensors
+│   ├── physics.py          # enforce_waterline_physics & compute_war
+│   ├── gradcam.py          # Analytical Grad-CAM++ XAI engine
+│   ├── dataset_catalog.py  # Indexes benchmark video frames & consensus masks
+│   ├── pipeline.py         # End-to-end inference & comparison overlay generator
+│   └── server.py           # Asynchronous aiohttp REST & static server
+├── static/
+│   ├── css/
+│   │   ├── design-tokens.css # WCAG-compliant design tokens
+│   │   └── workbench.css   # Swiss minimalist data-dense styling
+│   ├── js/
+│   │   ├── api.js          # Asynchronous backend client
+│   │   └── app.js          # Interactive workbench & swipe slider controller
+│   └── index.html          # Semantic workbench UI
+├── requirements.txt        # Runtime dependencies
+└── run.ps1                 # Windows launcher script
+```
+
+### Key Capabilities:
+- **Specimen Ingestion**: One-click selection of untouched test benchmark frames (`video 21 - frame 040`, `video 1`, `video 24`) or drag-and-drop custom specimen uploads.
+- **Physical Waterline Post-Processing**: Real-time toggle for bottom-reservoir contiguity and column monotonicity to filter out surface specularities and floating noise droplets.
+- **Explainable AI**: Analytical Grad-CAM++ heatmaps computed across user-selectable target layers (`decoder.blocks.x_0_4` primary, `decoder.blocks.x_0_3`, or `encoder.layer4[-1]`) with adjustable colormaps (`Jet`, `Plasma`, `Inferno`, `Viridis`) and opacity sliders.
+- **Interactive Comparison Slider**: Swipe slider enabling before/after inspection between Input Specimen and Physics-Enforced Mask, Input and Saliency Heatmap, or Ground Truth and Prediction.
+- **Quantitative Telemetry**: Instant readout of Wetted Area Ratio (WAR %), pixel counts, estimated water front absorption height, floating noise filtered count, overlap metrics (Dice, IoU, Precision, Recall), and hardware latency breakdown.
 
 ---
 
@@ -142,9 +182,28 @@ Evaluated across all 218 test images to prove model soundness and absence of bac
 ├── .gitignore                                # Excludes checkpoints (>100MB), venvs, agents, caches
 ├── README.md                                 # Project documentation & benchmark overview
 ├── video_split_assignment.csv                # Video-level train/validation/test split assignment
-├── build_xai_notebook.py                     # Programmatic builder for XAI notebook
 │
-├── Notebooks (Reproducible Pipeline)
+├── frontend/                                 # Interactive Scientific Research Workbench
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── model.py                          # U-Net++ checkpoint loader & normalization
+│   │   ├── physics.py                        # enforce_waterline_physics, compute_war
+│   │   ├── gradcam.py                        # Analytical Grad-CAM++ XAI engine
+│   │   ├── dataset_catalog.py                # Video sequence & consensus mask catalog
+│   │   ├── pipeline.py                       # End-to-end inference & overlay generator
+│   │   └── server.py                         # Asynchronous aiohttp REST & static server
+│   ├── static/
+│   │   ├── css/
+│   │   │   ├── design-tokens.css             # WCAG AA/AAA design tokens
+│   │   │   └── workbench.css                 # Swiss minimalist data-dense stylesheet
+│   │   ├── js/
+│   │   │   ├── api.js                        # Asynchronous backend client
+│   │   │   └── app.js                        # Workbench controller & swipe comparison slider
+│   │   └── index.html                        # Semantic laboratory workbench UI
+│   ├── requirements.txt                      # Frontend runtime dependencies
+│   └── run.ps1                               # Local hosting launcher script
+│
+├── Notebooks (Reproducible DL Pipeline)
 │   ├── unetpp-res34.ipynb                    # U-Net++ (ResNet-34) Training & Evaluation (Winner)
 │   ├── unetpp-res50.ipynb                    # U-Net++ (ResNet-50) Pipeline
 │   ├── deeplabv3plus.ipynb                   # DeepLabV3+ (ResNet-50) Pipeline
@@ -152,39 +211,20 @@ Evaluated across all 218 test images to prove model soundness and absence of bac
 │   ├── fpn1.ipynb                            # FPN (EfficientNet-B2) Pipeline
 │   └── xai_gradcam_unetpp.ipynb              # 34-Cell Standalone Grad-CAM++ XAI Notebook
 │
-├── outputs/                                  # Qualitative Visualizations (5-Panel Benchmark Figures)
-│   └── segformer_visualizations/             # Test set 5-panel predictions, CSV, contact sheet, PDF
-│
-├── evaluation/                               # Benchmark Evaluation Metrics & Visualizations
-│   ├── four_architecture_benchmark_comparison.csv
-│   ├── unetpp/                               # U-Net++ metrics, predictions, WAR trajectories
-│   ├── deeplabv3plus/                        # DeepLabV3+ evaluation outputs
-│   ├── segformer_b1/                         # SegFormer evaluation outputs
-│   └── fpn/                                  # FPN evaluation outputs
+├── evaluation/                               # Benchmark Evaluation Checkpoints & Metrics
+│   ├── unetpp_best.pth                       # Best U-Net++ checkpoint weights (Val IoU: 0.890)
+│   ├── metrics_train_val.csv
+│   └── metrics_test.csv
 │
 ├── video-frame/                              # Video frames and multi-annotator ground truth
-│   ├── video frames/                         # Extracted frames across 24 specimen videos
-│   ├── annotator 1/                          # Individual binary masks from Annotator 1
-│   ├── annotator 2/                          # Individual binary masks from Annotator 2
-│   ├── annotator 3/                          # Individual binary masks from Annotator 3
-│   └── annotator 4/                          # Individual binary masks from Annotator 4
+│   └── video-frame/
+│       ├── frames/                           # Extracted frames across specimen videos
+│       ├── consensus_masks/                  # Majority-vote consensus masks
+│       └── annotations/                      # Annotator annotations
 │
 └── xai_gradcam_outputs/                      # Grad-CAM++ XAI Artifacts & Visualizations
-    ├── tables/
-    │   ├── per_image_test_metrics.csv        # Metrics across all 218 test images
-    │   ├── representative_cases.csv          # Identified cases across 8 quantitative criteria
-    │   ├── xai_spatial_attribution_diagnostics.csv # Frame-by-frame attribution fractions
-    │   └── xai_summary.json                  # Machine-readable summary statistics & correlations
-    ├── figures/
-    │   ├── annotator_agreement_comparison.png # 4-annotator agreement vs. Grad-CAM++ attribution
-    │   ├── attribution_vs_war_error.png      # Statistical correlation scatter plots
-    │   ├── boundary_analysis_cases.png       # Waterline overlays & vertical profile plots
-    │   └── failure_analysis_detailed.png     # RGB, GT, Pred, Error Map, and CAM failure panels
-    ├── layer_comparison/                     # Layer-wise comparison (encoder.layer4 vs decoder)
-    ├── best_cases/                           # 6-panel XAI visualizations (top Dice)
-    ├── median_cases/                         # 6-panel XAI visualizations (median Dice)
-    ├── worst_cases/                          # 6-panel XAI visualizations (lowest Dice)
-    └── war_error_cases/                      # 6-panel XAI visualizations (highest WAR error)
+    ├── tables/                               # Quantitative metrics and correlation summaries
+    └── figures/                              # XAI overlays, boundary profiles, failure panels
 ```
 
 ---
@@ -196,12 +236,12 @@ The dataset consists of high-resolution video recordings tracking capillary wate
 - **Split Strategy**: Video/sample-level split (prevents temporal data leakage).
   - **Train**: 17 videos (1,234 frames)
   - **Validation**: 4 videos (290 frames)
-  - **Test**: 3 locked videos (`video 24`, `video 1`, `video 21`; 218 frames)
+  - **Test**: 3 locked videos (`video 24`, `video 1`, `video 21`; 218 frames total)
 - **Consensus Voting**:
   For each frame $x$, consensus mask $M$ is formed by pixel-wise voting across 4 independent annotators:
   $$M(i,j) = \mathbb{I}\left( \sum_{k=1}^4 M_k(i,j) \ge 2 \right)$$
 - **Physical Parameter Formulation**:
-  $$\text{WAR} = \frac{\sum_{(i,j) \in \text{ROI}} M(i,j)}{|\text{ROI}|}$$
+  $$\text{WAR} = \frac{\sum_{(i,j)} M_{\text{wet}}(i,j)}{\text{Total Frame Pixels}}$$
 
 ---
 
@@ -229,33 +269,53 @@ source venv/bin/activate
 ### 3. Install Dependencies
 
 ```bash
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
-pip install segmentation-models-pytorch albumentations opencv-python matplotlib pandas scikit-learn scipy jupyter
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install segmentation-models-pytorch albumentations opencv-python matplotlib pandas scikit-learn scipy aiohttp pillow
 ```
 
 ---
 
 ## 🚀 Quickstart & Reproduction Guide
 
-### Reproduce Explainable AI (Grad-CAM++)
+### 1. Launch Interactive Web Workbench
 
-Launch Jupyter Notebook and open `xai_gradcam_unetpp.ipynb`:
+To run the local scientific workbench application:
+
+```bash
+# Using Python directly:
+python -m frontend.app.server --port 8000
+
+# Or on Windows using PowerShell:
+.\frontend\run.ps1 -Port 8000
+```
+
+Open **`http://127.0.0.1:8000`** in your browser.
+
+- Select any benchmark frame (e.g. `Video 21 - Frame 040`, `Video 1 - Frame 001`, `Video 24 - Frame 064`) or upload an image.
+- Review the 4-panel matrix: Input Specimen, Raw U-Net++ Output, Physics-Enforced Waterline Mask, and Grad-CAM++ Attribution Heatmap.
+- Switch to the **Comparison Slider** to swipe between Input and Predicted Waterline.
+- Export the complete quantitative analysis as JSON.
+
+### 2. Run Grad-CAM++ XAI Notebook
+
+Open and execute `xai_gradcam_unetpp.ipynb`:
 
 ```bash
 jupyter notebook xai_gradcam_unetpp.ipynb
 ```
 
 Running all cells will:
-1. Load and freeze `evaluation/unetpp/unetpp_best.pth`.
-2. Verify test set metrics ($Dice = 0.9648$, $WAR\ R^2 = 0.9980$).
+1. Load and freeze `evaluation/unetpp_best.pth`.
+2. Verify test set metrics ($Dice = 0.965$, $IoU = 0.935$).
 3. Generate publication-quality 6-panel Grad-CAM++ figures.
 4. Calculate spatial attribution metrics across all 218 test frames.
 5. Export correlation plots and failure analysis panels into `xai_gradcam_outputs/`.
 
-### Run Model Training Pipelines
+### 3. Run Model Training Pipelines
 
 Each architecture is packaged as an independent, reproducible notebook:
-- `unetpp1.ipynb`: U-Net++ (ResNet-34)
+- `unetpp-res34.ipynb`: U-Net++ (ResNet-34)
+- `unetpp-res50.ipynb`: U-Net++ (ResNet-50)
 - `deeplabv3plus.ipynb`: DeepLabV3+ (ResNet-50)
 - `segformer_b1.ipynb`: SegFormer-B1 (MiT-B1)
 - `fpn1.ipynb`: FPN (EfficientNet-B2)

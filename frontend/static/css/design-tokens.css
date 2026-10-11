@@ -1,0 +1,74 @@
+/**
+ * Scientific Research Instrument Design Tokens
+ * 
+ * Aesthetic: Swiss Minimalism & Data-Dense Scientific Dashboard
+ * Conforms to WCAG 2.1 AA/AAA contrast standards (minimum 4.5:1 text contrast)
+ * Zero vibe-coding, zero decorative blur, pure functional hierarchy.
+ */
+
+:root {
+  /* Surface & Canvas Tokens */
+  --canvas-bg: #090d16;
+  --surface-base: #0f172a;
+  --surface-raised: #141f36;
+  --surface-overlay: #1e293b;
+  --surface-active: #27354f;
+
+  /* Border & Divider Tokens */
+  --border-subtle: #1e293b;
+  --border-default: #334155;
+  --border-emphasis: #475569;
+  --border-focus: #3b82f6;
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #090d16;
+
+  /* Functional & Scientific Palette */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: rgba(37, 99, 235, 0.15);
+
+  --color-emerald: #10b981;
+  --color-emerald-soft: rgba(16, 185, 129, 0.15);
+
+  --color-amber: #f59e0b;
+  --color-amber-soft: rgba(245, 158, 11, 0.15);
+
+  --color-crimson: #ef4444;
+  --color-crimson-soft: rgba(239, 68, 68, 0.15);
+
+  --color-cyan: #06b6d4;
+  --color-cyan-soft: rgba(6, 182, 212, 0.15);
+
+  /* Typography Scales */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Fira Code", "JetBrains Mono", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+  --text-xs: 0.725rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* Spatial Scale */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+
+  /* Radius & Curves (sharp, instrument-grade) */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-normal: 180ms ease;
+}
